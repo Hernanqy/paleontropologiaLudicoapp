@@ -329,14 +329,18 @@ function GameFrame({
           </>
         )}
 
-        {screen === "victory" && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute bottom-[7.4%] left-1/2 h-[11%] w-[34%] -translate-x-1/2 rounded-2xl focus:outline-none focus:ring-4 focus:ring-lime-300/80"
-            aria-label="Continuar"
-          />
-        )}
+       {screen === "victory" && (
+  <button
+    type="button"
+    onClick={(event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onReset();
+    }}
+    className="absolute bottom-[7.4%] left-1/2 h-[11%] w-[34%] -translate-x-1/2 rounded-2xl focus:outline-none focus:ring-4 focus:ring-lime-300/80"
+    aria-label="Continuar"
+  />
+)}
 
         {screen === "fail" && (
           <button
