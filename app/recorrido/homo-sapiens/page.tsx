@@ -74,7 +74,7 @@ export default function HomoSapiensPage() {
                 href="/recorrido/poblamiento-americano"
                 className="inline-flex w-full justify-center rounded-2xl bg-orange-400 px-6 py-4 font-bold text-slate-950 transition hover:bg-orange-300"
               >
-                Continuar al final
+                Continuar a Poblamiento americano
               </Link>
 
               <Link
@@ -90,5 +90,6 @@ export default function HomoSapiensPage() {
     </main>
   );
 }
+
 
 
