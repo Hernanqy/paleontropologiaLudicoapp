@@ -1,424 +1,285 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
-import { Check, Maximize, Minimize, RotateCcw, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Minimize } from "lucide-react";
 
 type GameScreen = "playing" | "victory" | "fail";
 
-type ChoiceId =
-  | "cooperar"
-  | "comunicar"
-  | "ensenar"
-  | "actuar-solo"
-  | "ignorar-memoria"
-  | "no-organizarse";
-
 type Choice = {
-  id: ChoiceId;
-  correct: boolean;
+  id: string;
   label: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  good: boolean;
+  className: string;
 };
 
 const choices: Choice[] = [
   {
     id: "cooperar",
-    correct: true,
     label: "Cooperar",
-    x: 3.3,
-    y: 68.5,
-    w: 29.4,
-    h: 10.8,
-  },
-  {
-    id: "actuar-solo",
-    correct: false,
-    label: "Actuar solo",
-    x: 34.6,
-    y: 68.5,
-    w: 29.4,
-    h: 10.8,
+    good: true,
+    className: "left-[13.1%] top-[68.7%] h-[9.1%] w-[23.9%]",
   },
   {
     id: "comunicar",
-    correct: true,
     label: "Comunicar",
-    x: 65.9,
-    y: 68.5,
-    w: 29.4,
-    h: 10.8,
-  },
-  {
-    id: "ignorar-memoria",
-    correct: false,
-    label: "Ignorar memoria",
-    x: 3.3,
-    y: 82.6,
-    w: 29.4,
-    h: 10.8,
+    good: true,
+    className: "left-[37.8%] top-[68.7%] h-[9.1%] w-[24%]",
   },
   {
     id: "ensenar",
-    correct: true,
     label: "Enseñar",
-    x: 34.6,
-    y: 82.6,
-    w: 29.4,
-    h: 10.8,
+    good: true,
+    className: "left-[63.1%] top-[68.7%] h-[9.1%] w-[24%]",
   },
   {
-    id: "no-organizarse",
-    correct: false,
-    label: "No organizarse",
-    x: 65.9,
-    y: 82.6,
-    w: 29.4,
-    h: 10.8,
+    id: "aislarse",
+    label: "Aislarse",
+    good: false,
+    className: "left-[13.1%] top-[80.8%] h-[9.1%] w-[23.9%]",
+  },
+  {
+    id: "improvisar",
+    label: "Improvisar",
+    good: false,
+    className: "left-[37.8%] top-[80.8%] h-[9.1%] w-[24%]",
+  },
+  {
+    id: "desperdiciar",
+    label: "Desperdiciar",
+    good: false,
+    className: "left-[63.1%] top-[80.8%] h-[9.1%] w-[24%]",
   },
 ];
 
-const REQUIRED_CORRECT = 3;
-const MAX_ERRORS = 2;
-const START_TIME = 60;
+function getScreenImage(screen: GameScreen) {
+  if (screen === "victory") return "/assets/homo-sapiens-victory.png";
+  if (screen === "fail") return "/assets/homo-sapiens-fail.png";
+  return "/assets/homo-sapiens-game.png";
+}
 
 export default function HomoSapiensScene() {
-  const [expanded, setExpanded] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
+  const router = useRouter();
 
+  const [expanded, setExpanded] = useState(true);
   const [screen, setScreen] = useState<GameScreen>("playing");
-  const [selected, setSelected] = useState<ChoiceId[]>([]);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [errorCount, setErrorCount] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(START_TIME);
+  const [seconds, setSeconds] = useState(15);
+  const [selected, setSelected] = useState<string[]>([]);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        closeExpanded();
-      }
-    }
+  const hits = useMemo(() => {
+    return selected.filter((id) => choices.find((choice) => choice.id === id)?.good).length;
+  }, [selected]);
 
-    document.addEventListener("keydown", handleKeyDown);
+  const errors = useMemo(() => {
+    return selected.filter((id) => choices.find((choice) => choice.id === id)?.good === false).length;
+  }, [selected]);
 
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, []);
+  const imageSrc = getScreenImage(screen);
 
-  useEffect(() => {
-    document.body.style.overflow = expanded ? "hidden" : "";
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [expanded]);
-
-  useEffect(() => {
-    if (!hasStarted) return;
-    if (screen !== "playing") return;
-
-    if (timeLeft <= 0) {
-      setScreen("fail");
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => window.clearTimeout(timer);
-  }, [hasStarted, timeLeft, screen]);
-
-  function openExpanded() {
+  function resetGame() {
+    setScreen("playing");
+    setSeconds(15);
+    setSelected([]);
     setExpanded(true);
-    setHasStarted(true);
   }
 
   function closeExpanded() {
     setExpanded(false);
   }
 
-  function handleChoice(choice: Choice) {
-    if (!hasStarted) return;
+  function choose(choice: Choice) {
     if (screen !== "playing") return;
     if (selected.includes(choice.id)) return;
 
     const nextSelected = [...selected, choice.id];
     setSelected(nextSelected);
 
-    if (choice.correct) {
-      const nextCorrect = correctCount + 1;
-      setCorrectCount(nextCorrect);
+    const nextHits = nextSelected.filter(
+      (id) => choices.find((item) => item.id === id)?.good
+    ).length;
 
-      if (nextCorrect >= REQUIRED_CORRECT) {
-        window.setTimeout(() => {
-          setScreen("victory");
-        }, 500);
-      }
-    } else {
-      const nextErrors = errorCount + 1;
-      setErrorCount(nextErrors);
+    const nextErrors = nextSelected.filter(
+      (id) => choices.find((item) => item.id === id)?.good === false
+    ).length;
 
-      if (nextErrors >= MAX_ERRORS) {
-        window.setTimeout(() => {
-          setScreen("fail");
-        }, 500);
-      }
+    if (nextHits >= 3) {
+      setTimeout(() => setScreen("victory"), 250);
+      return;
+    }
+
+    if (nextErrors >= 2) {
+      setTimeout(() => setScreen("fail"), 250);
     }
   }
 
-  function resetGame() {
-    setScreen("playing");
-    setSelected([]);
-    setCorrectCount(0);
-    setErrorCount(0);
-    setTimeLeft(START_TIME);
-    setHasStarted(false);
+  useEffect(() => {
+    if (screen !== "playing") return;
+
+    const timer = window.setInterval(() => {
+      setSeconds((current) => {
+        if (current <= 1) {
+          window.clearInterval(timer);
+          setScreen("fail");
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [screen]);
+
+  if (!expanded) {
+    return (
+      <section className="relative min-h-screen overflow-hidden bg-[#070504] text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(245,158,11,.22),transparent_35%),linear-gradient(180deg,#090705,#020201)]" />
+
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6 text-center">
+          <div className="rounded-full border border-amber-400/30 bg-black/50 px-5 py-2 text-sm font-black uppercase tracking-[.25em] text-amber-300">
+            Homo sapiens
+          </div>
+
+          <h1 className="mt-6 font-serif text-5xl font-black uppercase text-amber-100 md:text-7xl">
+            Desafío de supervivencia
+          </h1>
+
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-stone-300">
+            Elegí tres ventajas clave que fortalecieron al grupo: cooperación,
+            comunicación y enseñanza.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="mt-8 rounded-2xl border border-amber-400/40 bg-amber-950/40 px-8 py-4 text-lg font-black uppercase tracking-wide text-amber-100 transition hover:bg-amber-900/50"
+          >
+            Abrir desafío
+          </button>
+        </div>
+      </section>
+    );
   }
 
   return (
-    <div className="w-full">
-      <GameFrame
-        expanded={false}
-        hasStarted={hasStarted}
-        screen={screen}
-        selected={selected}
-        correctCount={correctCount}
-        errorCount={errorCount}
-        timeLeft={timeLeft}
-        onChoice={handleChoice}
-        onExpand={openExpanded}
-        onClose={closeExpanded}
-        onReset={resetGame}
-      />
-
-      {expanded && (
-        <div className="fixed inset-0 z-50 bg-black">
-          <GameFrame
-            expanded
-            hasStarted={hasStarted}
-            screen={screen}
-            selected={selected}
-            correctCount={correctCount}
-            errorCount={errorCount}
-            timeLeft={timeLeft}
-            onChoice={handleChoice}
-            onExpand={openExpanded}
-            onClose={closeExpanded}
-            onReset={resetGame}
+    <main className="relative min-h-screen overflow-hidden bg-[#142f34] text-white">
+      <div className="flex min-h-screen items-center justify-center p-2 md:p-4">
+        <section className="relative aspect-[1672/941] w-full max-w-[1672px] overflow-hidden bg-black shadow-[0_30px_90px_rgba(0,0,0,.55)]">
+          <img
+            src={imageSrc}
+            alt="Desafío interactivo de Homo sapiens"
+            className="absolute inset-0 h-full w-full object-cover"
+            draggable={false}
           />
-        </div>
-      )}
 
-      {!expanded && (
-        <p className="mt-3 text-sm text-slate-500">
-          Tocá “Pantalla grande” para iniciar el desafío. Elegí 3 acciones
-          correctas antes de cometer 2 errores.
-        </p>
-      )}
-    </div>
-  );
-}
+          {screen === "playing" && (
+            <>
+              <div className="absolute left-[58.8%] top-[5.5%] z-10 rounded bg-black/70 px-3 py-1 text-2xl font-black text-amber-300 md:text-3xl">
+                {seconds}s
+              </div>
 
-function GameFrame({
-  expanded,
-  hasStarted,
-  screen,
-  selected,
-  correctCount,
-  errorCount,
-  timeLeft,
-  onChoice,
-  onExpand,
-  onClose,
-  onReset,
-}: {
-  expanded: boolean;
-  hasStarted: boolean;
-  screen: GameScreen;
-  selected: ChoiceId[];
-  correctCount: number;
-  errorCount: number;
-  timeLeft: number;
-  onChoice: (choice: Choice) => void;
-  onExpand: () => void;
-  onClose: () => void;
-  onReset: () => void;
-}) {
-  const imageSrc =
-    screen === "victory"
-      ? "/assets/homo-sapiens-victory.png"
-      : screen === "fail"
-        ? "/assets/homo-sapiens-fail.png"
-        : "/assets/homo-sapiens-game.png";
+              <div className="absolute left-[70.9%] top-[5.5%] z-10 rounded bg-black/70 px-3 py-1 text-2xl font-black text-lime-400 md:text-3xl">
+                {hits}/3
+              </div>
 
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  const formattedTime = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+              <div className="absolute left-[83.2%] top-[5.5%] z-10 rounded bg-black/70 px-3 py-1 text-2xl font-black text-red-400 md:text-3xl">
+                {errors}/2
+              </div>
 
-  return (
-    <div
-      className={
-        expanded
-          ? "relative flex h-screen w-screen items-center justify-center overflow-hidden bg-black"
-          : "relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black shadow-2xl"
-      }
-    >
-      <div className="relative aspect-[1792/1024] h-auto w-full max-h-screen max-w-screen overflow-hidden">
-        <img
-          src={imageSrc}
-          alt="Desafío visual de Homo sapiens"
-          className="h-full w-full select-none object-contain"
-          draggable={false}
-        />
+              {choices.map((choice) => {
+                const isSelected = selected.includes(choice.id);
 
-        {screen === "playing" && (
-          <>
-            <div className="pointer-events-none absolute right-[8.6%] top-[3.6%] flex items-center gap-[1.5vw]">
-              <HudValue
-                color="orange"
-                value={hasStarted ? formattedTime : "1:00"}
-              />
-              <HudValue color="green" value={`${correctCount}/3`} />
-              <HudValue color="red" value={`${errorCount}/2`} />
-            </div>
-
-            {choices.map((choice) => {
-              const wasSelected = selected.includes(choice.id);
-
-              return (
-                <button
-                  key={choice.id}
-                  type="button"
-                  aria-label={choice.label}
-                  onClick={() => onChoice(choice)}
-                  className="absolute rounded-2xl focus:outline-none"
-                  style={{
-                    left: `${choice.x}%`,
-                    top: `${choice.y}%`,
-                    width: `${choice.w}%`,
-                    height: `${choice.h}%`,
-                  }}
-                >
-                  {wasSelected && (
-                    <>
+                return (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      choose(choice);
+                    }}
+                    className={`absolute z-20 rounded-2xl ${choice.className} ${
+                      isSelected
+                        ? choice.good
+                          ? "shadow-[inset_0_0_40px_rgba(132,204,22,.38),0_0_22px_rgba(132,204,22,.35)]"
+                          : "shadow-[inset_0_0_40px_rgba(239,68,68,.38),0_0_22px_rgba(239,68,68,.35)]"
+                        : "transition hover:shadow-[inset_0_0_35px_rgba(251,191,36,.24)]"
+                    } focus:outline-none focus:ring-4 focus:ring-amber-300/70`}
+                    aria-label={choice.label}
+                  >
+                    {isSelected && (
                       <span
-                        className={`pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl ${
-                          choice.correct ? "bg-lime-300/50" : "bg-red-400/50"
-                        }`}
-                      />
-
-                      <span
-                        className={`pointer-events-none absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 text-white shadow-2xl ${
-                          choice.correct
-                            ? "border-lime-100 bg-lime-500/85 shadow-lime-300/40"
-                            : "border-red-100 bg-red-500/85 shadow-red-300/40"
+                        className={`absolute right-4 top-3 grid h-10 w-10 place-items-center rounded-full border text-2xl font-black ${
+                          choice.good
+                            ? "border-lime-300/70 bg-lime-950/70 text-lime-200"
+                            : "border-red-300/70 bg-red-950/70 text-red-200"
                         }`}
                       >
-                        {choice.correct ? <Check size={34} /> : <X size={34} />}
+                        {choice.good ? "✓" : "×"}
                       </span>
-                    </>
-                  )}
-                </button>
-              );
-            })}
-          </>
-        )}
+                    )}
+                  </button>
+                );
+              })}
+            </>
+          )}
 
-       {screen === "victory" && (
-  <button
-    type="button"
-    onClick={(event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      onReset();
-    }}
-    className="absolute bottom-[7.4%] left-1/2 h-[11%] w-[34%] -translate-x-1/2 rounded-2xl focus:outline-none focus:ring-4 focus:ring-lime-300/80"
-    aria-label="Continuar"
-  />
-)}
-
-        {screen === "fail" && (
-          <button
-            type="button"
-            onClick={onReset}
-            className="absolute bottom-[7.4%] left-1/2 h-[11%] w-[34%] -translate-x-1/2 rounded-2xl focus:outline-none focus:ring-4 focus:ring-orange-300/80"
-            aria-label="Intentar de nuevo"
-          />
-        )}
-
-        <div className="absolute right-4 top-4 flex gap-3 opacity-85">
-          {expanded ? (
+          {screen === "victory" && (
             <button
               type="button"
-              onClick={onClose}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-2 text-sm text-white backdrop-blur transition hover:bg-white/10"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                router.push("/recorrido/poblamiento-americano");
+              }}
+              className="absolute bottom-[7.4%] left-1/2 z-30 h-[11%] w-[34%] -translate-x-1/2 rounded-2xl transition hover:shadow-[inset_0_0_40px_rgba(251,191,36,.25)] focus:outline-none focus:ring-4 focus:ring-lime-300/80"
+              aria-label="Continuar"
+            />
+          )}
+
+          {screen === "fail" && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                resetGame();
+              }}
+              className="absolute bottom-[7.4%] left-1/2 z-30 h-[11%] w-[40%] -translate-x-1/2 rounded-2xl transition hover:shadow-[inset_0_0_40px_rgba(251,191,36,.25)] focus:outline-none focus:ring-4 focus:ring-orange-300/80"
+              aria-label="Intentar de nuevo"
+            />
+          )}
+
+          <div className="absolute right-4 top-4 z-40 flex gap-3 opacity-85">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                closeExpanded();
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-2 text-sm text-white backdrop-blur transition hover:bg-black"
             >
               <Minimize size={16} />
               Volver al recorrido
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onExpand}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-2 text-sm text-white backdrop-blur transition hover:bg-white/10"
-            >
-              <Maximize size={16} />
-              Pantalla grande
-            </button>
-          )}
 
-          <button
-            type="button"
-            onClick={onReset}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/70 px-4 py-2 text-sm text-white backdrop-blur transition hover:bg-white/10"
-          >
-            <RotateCcw size={16} />
-            Reiniciar
-          </button>
-        </div>
-
-        {!hasStarted && screen === "playing" && (
-          <div className="absolute inset-0 flex items-end justify-center bg-black/10 pb-[3%]">
-            <button
-              type="button"
-              onClick={onExpand}
-              className="rounded-2xl border border-orange-300/40 bg-black/75 px-5 py-3 text-base font-black text-orange-200 shadow-2xl backdrop-blur-md transition hover:bg-orange-300 hover:text-slate-950"
-            >
-              Iniciar pantalla grande
-            </button>
+            {screen !== "playing" && (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  resetGame();
+                }}
+                className="rounded-full border border-white/10 bg-black/70 px-4 py-2 text-sm text-white backdrop-blur transition hover:bg-black"
+              >
+                Reiniciar
+              </button>
+            )}
           </div>
-        )}
+        </section>
       </div>
-    </div>
-  );
-}
-
-function HudValue({
-  value,
-  color,
-}: {
-  value: string;
-  color: "orange" | "green" | "red";
-}) {
-  const colorClass =
-    color === "orange"
-      ? "text-orange-300"
-      : color === "green"
-        ? "text-lime-300"
-        : "text-red-300";
-
-  return (
-    <div className="flex h-[5vw] min-h-[40px] w-[8.6vw] min-w-[84px] items-center justify-center rounded-2xl bg-black/55 backdrop-blur-[2px]">
-      <span
-        className={`text-[clamp(1.2rem,2vw,2.5rem)] font-black leading-none ${colorClass} drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]`}
-      >
-        {value}
-      </span>
-    </div>
+    </main>
   );
 }
