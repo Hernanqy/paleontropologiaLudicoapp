@@ -194,3 +194,4 @@ export default function PoblamientoAmericanoScene() {
     </main>
   );
 }
+

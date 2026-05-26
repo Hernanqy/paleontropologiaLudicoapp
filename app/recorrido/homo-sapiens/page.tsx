@@ -71,7 +71,7 @@ export default function HomoSapiensPage() {
 
             <div className="mt-8 flex flex-col gap-3">
               <Link
-                href="/recorrido/presente"
+                href="/recorrido/poblamiento-americano"
                 className="inline-flex w-full justify-center rounded-2xl bg-orange-400 px-6 py-4 font-bold text-slate-950 transition hover:bg-orange-300"
               >
                 Continuar al final
@@ -90,3 +90,5 @@ export default function HomoSapiensPage() {
     </main>
   );
 }
+
+
