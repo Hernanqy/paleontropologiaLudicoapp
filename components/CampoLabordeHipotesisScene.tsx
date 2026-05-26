@@ -16,45 +16,45 @@ type HypothesisOption = {
 const hypothesisOptions: HypothesisOption[] = [
   {
     id: "caza",
-    label: "Caza y procesamiento de megafauna",
+    label: "Caza organizada del megaterio",
     good: true,
-    hotspot: "left-[8.2%] top-[68.4%] h-[10.3%] w-[26.2%]",
-    mark: "left-[31.2%] top-[73.7%]",
+    hotspot: "left-[1.8%] top-[61.4%] h-[35.2%] w-[15.2%]",
+    mark: "left-[9.4%] top-[91.6%]",
   },
   {
-    id: "pantano",
-    label: "Borde de ambiente pantanoso",
+    id: "animal-muerto",
+    label: "Aprovechamiento de un animal muerto",
     good: true,
-    hotspot: "left-[36.8%] top-[68.4%] h-[10.3%] w-[26.2%]",
-    mark: "left-[59.8%] top-[73.7%]",
+    hotspot: "left-[18.0%] top-[61.4%] h-[35.2%] w-[15.2%]",
+    mark: "left-[25.6%] top-[91.6%]",
   },
   {
-    id: "historia",
-    label: "Parte de nuestra historia hace 12.600 años",
+    id: "empantanado",
+    label: "Megaterio empantanado",
     good: true,
-    hotspot: "left-[65.4%] top-[68.4%] h-[10.3%] w-[26.2%]",
-    mark: "left-[88.4%] top-[73.7%]",
+    hotspot: "left-[34.2%] top-[61.4%] h-[35.2%] w-[15.2%]",
+    mark: "left-[41.8%] top-[91.6%]",
   },
   {
     id: "dinosaurios",
-    label: "Humanos cazando dinosaurios",
+    label: "Convivencia pacífica con dinosaurios",
     good: false,
-    hotspot: "left-[8.2%] top-[81.3%] h-[10.3%] w-[26.2%]",
-    mark: "left-[31.2%] top-[86.6%]",
+    hotspot: "left-[50.4%] top-[61.4%] h-[35.2%] w-[15.2%]",
+    mark: "left-[58.0%] top-[91.6%]",
+  },
+  {
+    id: "metal",
+    label: "Uso de armas de metal",
+    good: false,
+    hotspot: "left-[66.6%] top-[61.4%] h-[35.2%] w-[15.2%]",
+    mark: "left-[74.2%] top-[91.6%]",
   },
   {
     id: "ciudad",
-    label: "Una ciudad antigua",
+    label: "Construcción de una ciudad de piedra",
     good: false,
-    hotspot: "left-[36.8%] top-[81.3%] h-[10.3%] w-[26.2%]",
-    mark: "left-[59.8%] top-[86.6%]",
-  },
-  {
-    id: "azar",
-    label: "Huesos sin relación humana",
-    good: false,
-    hotspot: "left-[65.4%] top-[81.3%] h-[10.3%] w-[26.2%]",
-    mark: "left-[88.4%] top-[86.6%]",
+    hotspot: "left-[82.8%] top-[61.4%] h-[35.2%] w-[15.2%]",
+    mark: "left-[90.4%] top-[91.6%]",
   },
 ];
 
@@ -132,7 +132,7 @@ export default function CampoLabordeHipotesisScene() {
         <section className="relative aspect-[16/9] w-full max-w-[1792px] overflow-hidden bg-black shadow-[0_30px_90px_rgba(0,0,0,.55)]">
           <img
             src="/assets/campo-laborde-hipotesis.jpg"
-            alt="Hipótesis de Campo Laborde"
+            alt="Campo Laborde - hipótesis"
             className="absolute inset-0 h-full w-full object-cover"
             draggable={false}
           />
@@ -177,12 +177,13 @@ export default function CampoLabordeHipotesisScene() {
 
               {hypothesisOptions.map((option) => {
                 const isSelected = selected.includes(option.id);
+
                 if (!isSelected) return null;
 
                 return (
                   <div
                     key={`${option.id}-mark`}
-                    className={`absolute z-40 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border text-3xl font-black shadow-xl ${option.mark} ${
+                    className={`absolute z-40 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border text-3xl font-black shadow-xl ${option.mark} ${
                       option.good
                         ? "border-lime-300/80 bg-lime-950/80 text-lime-200 shadow-lime-500/30"
                         : "border-red-300/80 bg-red-950/80 text-red-200 shadow-red-500/30"
@@ -203,11 +204,11 @@ export default function CampoLabordeHipotesisScene() {
                 </div>
 
                 <h2 className="mt-6 font-serif text-5xl font-black uppercase text-amber-100">
-                  Nuestra historia profunda
+                  Hipótesis reconstruidas
                 </h2>
 
                 <p className="mt-4 text-xl leading-relaxed text-stone-300">
-                  Campo Laborde muestra que los grupos humanos que habitaron la región pampeana hace unos 12.600 años forman parte de nuestra historia.
+                  Las evidencias permiten pensar en caza organizada, aprovechamiento de un animal muerto o un megaterio empantanado. Es parte de nuestra historia profunda desde hace aproximadamente 12.600 años.
                 </p>
 
                 <button
@@ -233,7 +234,7 @@ export default function CampoLabordeHipotesisScene() {
                 </h2>
 
                 <p className="mt-4 text-xl leading-relaxed text-stone-300">
-                  Revisá las hipótesis basadas en evidencias arqueológicas del sitio.
+                  Recordá: las hipótesis correctas deben relacionarse con la megafauna, el contexto del sitio y las evidencias arqueológicas.
                 </p>
 
                 <button
