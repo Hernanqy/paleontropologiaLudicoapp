@@ -213,7 +213,7 @@ export default function CampoLabordeHipotesisScene() {
 
                 <button
                   type="button"
-                  onClick={() => router.push("/recorrido/homo-sapiens")}
+                  onClick={() => router.push("/recorrido/presente")}
                   className="mt-7 rounded-2xl border border-lime-300/40 bg-lime-950/45 px-8 py-4 text-lg font-black uppercase tracking-wide text-lime-100 transition hover:bg-lime-900/50"
                 >
                   Volver al recorrido
@@ -252,3 +252,4 @@ export default function CampoLabordeHipotesisScene() {
     </main>
   );
 }
+
